@@ -24,7 +24,7 @@ export default function App() {
           <SafetyStatusCard title="🔊 Audio Status" value="Normal Noise Level" bgColor="bg-indigo-500" />
         </View>
 
-        <View className="p-5 mt-2.5 bg-neutral-800 rounded-xl mx-4">
+        <View className="p-5 mt-2.5 bg-custom-purple rounded-xl mx-4">
           <Text className="text-xl font-bold text-white mb-4">Secondary Sensors</Text>
           <SensorStatus label="🌡️ Temperature" value="25.5°C" />
           <SensorStatus label="💧 Humidity" value="55%" />
