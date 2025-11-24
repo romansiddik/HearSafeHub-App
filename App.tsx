@@ -19,9 +19,9 @@ export default function App() {
         </View>
 
         <View className="px-4">
-          <SafetyStatusCard title="🔥 Fire/Flame" value="Clear" bgColor="bg-green-800" />
-          <SafetyStatusCard title="💨 Gas/Smoke" value="Low" bgColor="bg-green-600" />
-          <SafetyStatusCard title="🔊 Audio Status" value="Normal Noise Level" bgColor="bg-green-600" />
+          <SafetyStatusCard title="🔥 Fire/Flame" value="Clear" bgColor="bg-teal-500" />
+          <SafetyStatusCard title="💨 Gas/Smoke" value="Low" bgColor="bg-blue-500" />
+          <SafetyStatusCard title="🔊 Audio Status" value="Normal Noise Level" bgColor="bg-indigo-500" />
         </View>
 
         <View className="p-5 mt-2.5 bg-neutral-800 rounded-xl mx-4">
