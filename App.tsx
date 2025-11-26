@@ -1,6 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
-import { Text, View, ScrollView } from 'react-native';
+import { Text, View, ScrollView, Modal, Button } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Audio } from 'expo-av';
+import { useState, useEffect, useRef } from 'react';
 
 import './global.css';
 
@@ -8,20 +10,39 @@ import SafetyStatusCard from './components/SafetyStatusCard';
 import SensorStatus from './components/SensorStatus';
 import { useData } from './hooks/useData';
 import { useWebSocket } from './hooks/useWebSocket';
-// 1. Import the shared WS_BASE_URL here
 import { Prediction, SensorReading, WS_BASE_URL } from './utils/api';
 
 export default function App() {
   const { predictions, sensorReadings, loading, error } = useData();
   
-  // 2. Use the variable, NOT the hardcoded string
   const { lastMessage: lastPrediction } = useWebSocket(`${WS_BASE_URL}/client/ws/client/ai`);
   const { lastMessage: lastSensorReading } = useWebSocket(`${WS_BASE_URL}/client/ws/client/data`);
 
-  // 3. REMOVED JSON.parse(). 
-  // Your hook already parses the data. lastPrediction is already an object.
-  const latestPrediction: Prediction | null = lastPrediction; 
+  const latestPrediction: Prediction | null = lastPrediction;
   const latestSensorReading: SensorReading | null = lastSensorReading;
+
+  const [isFireModalVisible, setIsFireModalVisible] = useState(false);
+  const sound = useRef(new Audio.Sound());
+
+  useEffect(() => {
+    const playAlarm = async () => {
+      try {
+        await sound.current.loadAsync(require('./assets/alarm.mp3'));
+        await sound.current.playAsync();
+      } catch (error) {
+        console.error("Couldn't play sound", error);
+      }
+    };
+
+    if (latestPrediction?.label === 'Fire') {
+      setIsFireModalVisible(true);
+      playAlarm();
+    }
+
+    return () => {
+      sound.current.unloadAsync();
+    };
+  }, [latestPrediction]);
 
   const getSafetyStatus = () => {
     if (!latestPrediction) return "Normal Noise Level";
@@ -32,14 +53,32 @@ export default function App() {
 
   const getGasStatus = () => {
     if (!latestSensorReading) return "Low";
-    // cast value to Number just to be safe, as your interface defined it as a string
     if (latestSensorReading.sensor_id === 'gas' && Number(latestSensorReading.value) > 500) return "High";
     return "Low";
+  };
+
+  const handleModalClose = () => {
+    setIsFireModalVisible(false);
+    sound.current.stopAsync();
   };
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-900">
       <StatusBar style="light" />
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isFireModalVisible}
+        onRequestClose={handleModalClose}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className="bg-red-500 p-10 rounded-lg items-center">
+            <Text className="text-white text-4xl font-bold mb-4">DANGER</Text>
+            <Text className="text-white text-2xl">Fire Detected!</Text>
+            <Button title="Dismiss" onPress={handleModalClose} />
+          </View>
+        </View>
+      </Modal>
       <ScrollView>
         <View className="p-5 items-center">
           <Text className="text-2xl font-bold text-white">Main Sensor Unit</Text>
