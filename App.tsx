@@ -8,15 +8,20 @@ import SafetyStatusCard from './components/SafetyStatusCard';
 import SensorStatus from './components/SensorStatus';
 import { useData } from './hooks/useData';
 import { useWebSocket } from './hooks/useWebSocket';
-import { Prediction, SensorReading } from './utils/api';
+// 1. Import the shared WS_BASE_URL here
+import { Prediction, SensorReading, WS_BASE_URL } from './utils/api';
 
 export default function App() {
   const { predictions, sensorReadings, loading, error } = useData();
-  const { lastMessage: lastPrediction } = useWebSocket('ws://127.0.0.1:8000/client/ws/client/ai');
-  const { lastMessage: lastSensorReading } = useWebSocket('ws://127.0.0.1:8000/client/ws/client/data');
+  
+  // 2. Use the variable, NOT the hardcoded string
+  const { lastMessage: lastPrediction } = useWebSocket(`${WS_BASE_URL}/client/ws/client/ai`);
+  const { lastMessage: lastSensorReading } = useWebSocket(`${WS_BASE_URL}/client/ws/client/data`);
 
-  const latestPrediction: Prediction | null = lastPrediction ? JSON.parse(lastPrediction) : null;
-  const latestSensorReading: SensorReading | null = lastSensorReading ? JSON.parse(lastSensorReading) : null;
+  // 3. REMOVED JSON.parse(). 
+  // Your hook already parses the data. lastPrediction is already an object.
+  const latestPrediction: Prediction | null = lastPrediction; 
+  const latestSensorReading: SensorReading | null = lastSensorReading;
 
   const getSafetyStatus = () => {
     if (!latestPrediction) return "Normal Noise Level";
@@ -27,18 +32,19 @@ export default function App() {
 
   const getGasStatus = () => {
     if (!latestSensorReading) return "Low";
-    if (latestSensorReading.sensor_id === 'gas' && latestSensorReading.value > 500) return "High";
+    // cast value to Number just to be safe, as your interface defined it as a string
+    if (latestSensorReading.sensor_id === 'gas' && Number(latestSensorReading.value) > 500) return "High";
     return "Low";
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-neutral-900 text-white">
+    <SafeAreaView className="flex-1 bg-neutral-900">
       <StatusBar style="light" />
       <ScrollView>
         <View className="p-5 items-center">
           <Text className="text-2xl font-bold text-white">Main Sensor Unit</Text>
           <Text className="text-lg text-green-500 font-bold">Status: OK</Text>
-          <Text className="text-xs text-gray-400 mt-1">Last updated: 10 seconds ago</Text>
+          <Text className="text-xs text-gray-400 mt-1">Last updated: Live</Text>
         </View>
 
         <View className="px-4">
@@ -47,7 +53,7 @@ export default function App() {
           <SafetyStatusCard title="🔊 Audio Status" value={getSafetyStatus()} bgColor="bg-indigo-500" />
         </View>
 
-        <View className="p-5 mt-2.5 bg-custom-purple rounded-xl mx-4">
+        <View className="p-5 mt-2.5 bg-violet-900/50 rounded-xl mx-4">
           <Text className="text-xl font-bold text-white mb-4">Secondary Sensors</Text>
           {loading ? (
             <Text className="text-white">Loading...</Text>
