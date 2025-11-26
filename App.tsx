@@ -1,11 +1,12 @@
 import { StatusBar } from 'expo-status-bar';
-import { Text, View, ScrollView, Modal, Button } from 'react-native';
+import { Text, View, ScrollView, Modal, Button, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Audio } from 'expo-av';
 import { useState, useEffect, useRef } from 'react';
 
 import './global.css';
 
+import HistoryDrawer from './components/HistoryDrawer';
 import SafetyStatusCard from './components/SafetyStatusCard';
 import SensorStatus from './components/SensorStatus';
 import { useData } from './hooks/useData';
@@ -24,6 +25,9 @@ export default function App() {
   const [isFireModalVisible, setIsFireModalVisible] = useState(false);
   const [isGunshotModalVisible, setIsGunshotModalVisible] = useState(false);
   const sound = useRef(new Audio.Sound());
+  
+  const { height } = Dimensions.get('window');
+  const drawerPeekHeight = height * 0.15;
 
   useEffect(() => {
     const playAlarm = async () => {
@@ -99,7 +103,7 @@ export default function App() {
           </View>
         </View>
       </Modal>
-      <ScrollView>
+      <ScrollView contentContainerStyle={{ paddingBottom: drawerPeekHeight }}>
         <View className="p-5 items-center">
           <Text className="text-2xl font-bold text-white">Main Sensor Unit</Text>
           <Text className="text-lg text-green-500 font-bold">Status: OK</Text>
@@ -118,14 +122,19 @@ export default function App() {
             <Text className="text-white">Loading...</Text>
           ) : (
             <>
-              {sensorReadings.map((reading) => (
-                <SensorStatus key={reading.id} label={`🌡️ ${reading.sensor_id}`} value={reading.value} />
-              ))}
+              {sensorReadings.length > 0 ? (
+                sensorReadings.map((reading) => (
+                  <SensorStatus key={reading.id} label={`🌡️ ${reading.sensor_id}`} value={reading.value} />
+                ))
+              ) : (
+                <SensorStatus label="🌡️ temp-01" value="0.0" />
+              )}
             </>
           )}
           {error && <Text className="text-red-500">{error}</Text>}
         </View>
       </ScrollView>
+      <HistoryDrawer predictions={predictions} sensorReadings={sensorReadings} />
     </SafeAreaView>
   );
 }
