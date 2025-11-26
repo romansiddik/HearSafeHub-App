@@ -22,6 +22,7 @@ export default function App() {
   const latestSensorReading: SensorReading | null = lastSensorReading;
 
   const [isFireModalVisible, setIsFireModalVisible] = useState(false);
+  const [isGunshotModalVisible, setIsGunshotModalVisible] = useState(false);
   const sound = useRef(new Audio.Sound());
 
   useEffect(() => {
@@ -37,6 +38,9 @@ export default function App() {
     if (latestPrediction?.label === 'Fire') {
       setIsFireModalVisible(true);
       playAlarm();
+    } else if (latestPrediction?.label === 'Gunshot') {
+      setIsGunshotModalVisible(true);
+      playAlarm();
     }
 
     return () => {
@@ -44,11 +48,12 @@ export default function App() {
     };
   }, [latestPrediction]);
 
-  const getSafetyStatus = () => {
+  const getAudioStatus = () => {
     if (!latestPrediction) return "Normal Noise Level";
     if (latestPrediction.label === 'Siren') return "Siren Detected!";
     if (latestPrediction.label === 'Fire') return "Fire Detected!";
-    return "Normal Noise Level";
+    if (latestPrediction.label === 'Gunshot') return "Gunshot Detected!";
+    return latestPrediction.label;
   };
 
   const getGasStatus = () => {
@@ -59,6 +64,7 @@ export default function App() {
 
   const handleModalClose = () => {
     setIsFireModalVisible(false);
+    setIsGunshotModalVisible(false);
     sound.current.stopAsync();
   };
 
@@ -79,6 +85,20 @@ export default function App() {
           </View>
         </View>
       </Modal>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isGunshotModalVisible}
+        onRequestClose={handleModalClose}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className="bg-red-500 p-10 rounded-lg items-center">
+            <Text className="text-white text-4xl font-bold mb-4">DANGER</Text>
+            <Text className="text-white text-2xl">Gunshot Detected!</Text>
+            <Button title="Dismiss" onPress={handleModalClose} />
+          </View>
+        </View>
+      </Modal>
       <ScrollView>
         <View className="p-5 items-center">
           <Text className="text-2xl font-bold text-white">Main Sensor Unit</Text>
@@ -87,9 +107,9 @@ export default function App() {
         </View>
 
         <View className="px-4">
-          <SafetyStatusCard title="🔥 Fire/Flame" value={getSafetyStatus()} bgColor="bg-teal-500" />
+          <SafetyStatusCard title="🔥 Fire/Flame" value={getAudioStatus()} bgColor="bg-teal-500" />
           <SafetyStatusCard title="💨 Gas/Smoke" value={getGasStatus()} bgColor="bg-blue-500" />
-          <SafetyStatusCard title="🔊 Audio Status" value={getSafetyStatus()} bgColor="bg-indigo-500" />
+          <SafetyStatusCard title="🔊 Audio Status" value={getAudioStatus()} bgColor="bg-indigo-500" />
         </View>
 
         <View className="p-5 mt-2.5 bg-violet-900/50 rounded-xl mx-4">
